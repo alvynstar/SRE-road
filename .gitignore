@@ -1,0 +1,31 @@
+# Secrets & credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+*secret*
+*credentials*
+*password*
+
+# Grafana provisioning with embedded passwords
+grafana/provisioning/datasources/*.yml
+
+# Terraform state (contains secrets)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
