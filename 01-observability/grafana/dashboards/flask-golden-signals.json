@@ -1,0 +1,84 @@
+{
+  "title": "Flask App — Four Golden Signals",
+  "uid": "flask-golden-signals",
+  "schemaVersion": 38,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Traffic — Requests per Second",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(app_requests_total[1m])",
+          "legendFormat": "{{method}} {{endpoint}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "palette-classic" }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Errors — Error Rate per Second",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(app_errors_total[1m])",
+          "legendFormat": "{{endpoint}} {{status_code}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "fixedColor": "red", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Latency — p95 Request Duration",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.95, rate(app_request_duration_seconds_bucket[1m]))",
+          "legendFormat": "p95 {{endpoint}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "fixedColor": "orange", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Latency — p50 Request Duration",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.50, rate(app_request_duration_seconds_bucket[1m]))",
+          "legendFormat": "p50 {{endpoint}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "fixedColor": "green", "mode": "fixed" }
+        }
+      }
+    }
+  ]
+}

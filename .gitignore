@@ -11,8 +11,9 @@ secrets/
 *credentials*
 *password*
 
-# Grafana provisioning with embedded passwords
+# Grafana provisioning with embedded passwords (allow datasources without auth)
 grafana/provisioning/datasources/*.yml
+!01-observability/grafana/provisioning/datasources/prometheus.yml
 
 # Terraform state (contains secrets)
 *.tfstate

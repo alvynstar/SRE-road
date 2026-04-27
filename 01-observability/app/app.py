@@ -7,6 +7,7 @@ app = Flask(__name__)
 # Prometheus metrics
 request_count = Counter('app_requests_total', 'Total requests', ['method', 'endpoint'])
 request_duration = Histogram('app_request_duration_seconds', 'Request duration', ['endpoint'])
+error_count = Counter('app_errors_total', 'Total errors', ['endpoint', 'status_code'])
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -32,6 +33,12 @@ def get_data():
                 "timestamp": time.time()
             }
         }), 200
+
+@app.route('/api/error', methods=['GET'])
+def get_error():
+    """Endpoint that always returns a 500 — used to test error metrics"""
+    error_count.labels(endpoint='/api/error', status_code='500').inc()
+    return jsonify({"status": "error", "message": "Simulated failure"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)

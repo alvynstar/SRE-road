@@ -7,7 +7,7 @@ A local observability pipeline running three containers:
 
 | Service | Port | Role |
 |---|---|---|
-| Flask App | 5001 | Exposes `/metrics`, `/health`, `/api/data` |
+| Flask App | 5001 | Exposes `/metrics`, `/health`, `/api/data`, `/api/error` |
 | Prometheus | 9090 | Scrapes Flask every 10s, stores time series |
 | Grafana | 3000 | Visualizes Prometheus data |
 
@@ -95,11 +95,31 @@ kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3001:80
 
 ---
 
+## Grafana Dashboard — Four Golden Signals
+
+Built and provisioned a custom Grafana dashboard (`flask-golden-signals`) that auto-loads on stack start via Grafana provisioning. No manual UI setup required.
+
+| Panel | Signal | PromQL |
+|---|---|---|
+| Traffic | Requests per second | `rate(app_requests_total[1m])` |
+| Errors | Error rate per second | `rate(app_errors_total[1m])` |
+| Latency p95 | 95th percentile duration | `histogram_quantile(0.95, rate(app_request_duration_seconds_bucket[1m]))` |
+| Latency p50 | Median duration | `histogram_quantile(0.50, rate(app_request_duration_seconds_bucket[1m]))` |
+
+**Files added:**
+- `grafana/provisioning/datasources/prometheus.yml` — auto-wires Prometheus datasource
+- `grafana/provisioning/dashboards/dashboard.yml` — tells Grafana where dashboards live
+- `grafana/dashboards/flask-golden-signals.json` — the dashboard definition
+
+**Tested:** Generated 20 normal requests + 10 errors — error rate spike visible in real time on the dashboard.
+
+---
+
 ## Next Steps
 
-- [ ] Create a custom Grafana dashboard for the Flask app
+- [x] Create a custom Grafana dashboard for the Flask app
+- [x] Add error metrics to the Flask app and simulate failures
 - [ ] Configure Prometheus alert rules (latency, error rate)
-- [ ] Add error metrics to the Flask app and simulate failures
 - [ ] Write a runbook for each alert
 - [ ] Explore log aggregation with Loki
 - [ ] Simulate a K8s incident and practice incident response
