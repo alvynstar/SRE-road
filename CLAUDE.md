@@ -31,8 +31,15 @@ CI/CD ownership, incident management, chaos engineering.
 - Dashboard panels: Traffic, Error Rate, Latency p95, Latency p50
 - Tested with live traffic — error rate spike confirmed visible in real time
 
+### What's been completed (continued)
+- Prometheus alert rules configured (`alerts.yml`) with two rules:
+  - `HighErrorRate` — fires when error rate > 0.7 req/s for 1 minute
+  - `HighLatency` — fires when p95 latency > 5s for 2 minutes
+- Alert lifecycle confirmed: Inactive → Pending → Firing
+- Fixed docker-compose volume mount to expose entire `prometheus/config/` folder
+
 ### What's next (next session)
-- Configure Prometheus alert rules (latency, error rate thresholds)
+- Configure AlertManager to route alerts to Slack/email/PagerDuty
 - Write a runbook for each alert
 
 ### Incidents debugged so far

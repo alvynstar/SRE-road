@@ -115,11 +115,33 @@ Built and provisioned a custom Grafana dashboard (`flask-golden-signals`) that a
 
 ---
 
+## Prometheus Alert Rules
+
+Configured two alert rules in `prometheus/config/alerts.yml`:
+
+| Alert | Condition | Duration | Severity |
+|---|---|---|---|
+| `HighErrorRate` | `rate(app_errors_total[1m]) > 0.7` | 1 minute | critical |
+| `HighLatency` | p95 latency > 5s | 2 minutes | warning |
+
+**Alert lifecycle:** Inactive → Pending → Firing  
+**Tested:** Flooded `/api/error` endpoint — `HighErrorRate` moved through all three states and confirmed firing at `http://localhost:9090/alerts`
+
+**Bug fixed:** `docker-compose.yml` was only mounting `prometheus.yml` instead of the entire `config/` folder — `alerts.yml` was never reaching the container. Fixed by mounting the whole directory.
+
+**Files added/modified:**
+- `prometheus/config/alerts.yml` — alert rule definitions
+- `prometheus/config/prometheus.yml` — added `rule_files` reference
+- `docker-compose.yml` — fixed volume mount to `./prometheus/config:/etc/prometheus`
+
+---
+
 ## Next Steps
 
 - [x] Create a custom Grafana dashboard for the Flask app
 - [x] Add error metrics to the Flask app and simulate failures
-- [ ] Configure Prometheus alert rules (latency, error rate)
+- [x] Configure Prometheus alert rules (latency, error rate)
+- [ ] Configure AlertManager to route alerts (Slack/email/PagerDuty)
 - [ ] Write a runbook for each alert
 - [ ] Explore log aggregation with Loki
 - [ ] Simulate a K8s incident and practice incident response

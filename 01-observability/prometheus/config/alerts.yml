@@ -1,0 +1,20 @@
+groups:
+  - name: flask-app
+    rules:
+      - alert: HighErrorRate
+        expr: rate(app_errors_total[1m]) > 0.7
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.endpoint }}"
+          description: "Error rate is {{ $value | printf \"%.2f\" }} req/s — more than 7 out of 10 requests are failing."
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(app_request_duration_seconds_bucket[1m])) > 5.0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency on {{ $labels.endpoint }}"
+          description: "p95 latency is {{ $value | printf \"%.2f\" }}s — users are waiting over 5 seconds."
