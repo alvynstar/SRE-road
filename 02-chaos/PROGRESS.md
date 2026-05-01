@@ -28,7 +28,7 @@ Chaos Engineering is the practice of deliberately introducing failures into a sy
 |---|-----------|------|-------------|--------|
 | 1 | Kill Flask container | Test if app outage is detected | None → `AppDown` (added) | **COMPLETE** |
 | 2 | Error rate flood | Validate `HighErrorRate` alert end-to-end | HighErrorRate | **COMPLETE** |
-| 3 | Latency spike | Validate `HighLatency` alert end-to-end | HighLatency | Pending |
+| 3 | Latency spike | Validate `HighLatency` alert end-to-end | HighLatency | **COMPLETE** |
 
 ---
 
@@ -77,6 +77,36 @@ Chaos Engineering is the practice of deliberately introducing failures into a sy
 
 **Files changed:**
 - `02-chaos/scripts/generate_errors.sh` — replaced `bc` math with bash arithmetic (also renamed from `02-chaos/chaos/` during repo reorg)
+
+---
+
+## Experiment 3 — Findings (2026-04-29)
+
+**What broke:** Ran `scripts/generate_latency.sh` which fires one request per second to `/api/slow` (each takes ~6s), pushing concurrent in-flight requests up and `histogram_quantile(0.95, ...)` above the 5s threshold.
+
+**Result:** Full alert path validated.
+- Script started at 16:43, alert fired at 16:45 (Pending → Firing)
+- Slack notification received in `#all-toks`
+- After Ctrl+C at ~16:46, alert resolved at ~16:48
+- `HighErrorRate` correctly stayed silent — slow ≠ error
+
+**Key insight — p95 ≈ p50:**
+- Both percentiles climbed to ~7.5s in Grafana
+- This is *not* the p95/p50 divergence pattern of a real partial degradation
+- Reason: every `/api/slow` request is uniformly slow, so 50th and 95th percentiles converge
+- Real-world note: when investigating production latency, a wide gap between p50 and p95 means *some* requests are slow; a small gap means *all* requests are slow. Different root causes, different fixes.
+
+**Errors panel stayed at "No data":** Confirmed metrics independence. Latency and errors are separate signals — an alert on one doesn't fire the other.
+
+**Follow-up filed:** Add a `/api/sometimes-slow` endpoint (slow only ~10% of requests) for a more realistic partial-degradation drill in a future experiment.
+
+---
+
+## Phase 2 Summary
+
+All three alerts validated end-to-end against the full pipeline (Prometheus → AlertManager → Slack). Discovered and closed one critical alerting gap (`AppDown`). Fixed one chaos-script bug (`bc` dependency). Identified one realism gap in the latency drill (filed as follow-up).
+
+**Total alerts in stack:** 3 (`AppDown`, `HighErrorRate`, `HighLatency`) — all tested.
 
 ---
 
@@ -134,8 +164,8 @@ bash scripts/generate_latency.sh   # runs until Ctrl+C
 ## Status Tracker
 - [x] Experiment 1 complete + postmortem filled + gap fixed (AppDown alert) + fix validated
 - [x] Experiment 2 complete + postmortem filled + chaos script bug fixed
-- [ ] Experiment 3 complete + postmortem filled
-- [ ] Phase 2 complete — update CLAUDE.md
+- [x] Experiment 3 complete + postmortem filled + p95/p50 convergence insight documented
+- [x] **Phase 2 COMPLETE** — ready to start Phase 3
 
 ---
 

@@ -37,7 +37,7 @@ CI/CD ownership, incident management, chaos engineering.
 
 ---
 
-## Current Phase: Phase 2 — Chaos Engineering (Active)
+## Phase 2 — Chaos Engineering (COMPLETE)
 
 ### What we're doing
 Deliberately breaking the Phase 1 stack in controlled ways to validate that monitoring, alerts, runbooks, and recovery procedures actually work. Three experiments planned — each one ends with a postmortem.
@@ -47,7 +47,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 |---|-----------|--------|
 | 1 | Kill Flask container — discover alerting gap | **COMPLETE** — gap found, `AppDown` alert added and validated |
 | 2 | Error rate flood — validate HighErrorRate end-to-end | **COMPLETE** — alert + Slack confirmed firing and resolving |
-| 3 | Latency spike — validate HighLatency end-to-end | In progress — app rebuilt with `/api/slow`, endpoint verified (6s response confirmed) |
+| 3 | Latency spike — validate HighLatency end-to-end | **COMPLETE** — alert + Slack confirmed; learned p95≈p50 because `/api/slow` is uniformly slow (real partial degradation would diverge) |
 
 ### Experiment 1 takeaway
 - Stopping the app produced **zero alerts** because `HighErrorRate`/`HighLatency` depend on metrics emitted by the app itself.
@@ -61,9 +61,11 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - `02-chaos/scripts/generate_latency.sh` — hits `/api/slow` continuously
 - `02-chaos/postmortems/` — postmortem templates (fill in live during each experiment)
 
-### What's next after Phase 2
-- Phase 3: CI/CD ownership — see `03-cicd/README.md` for plan
-- Phase 4: Log aggregation (Loki) — see `04-logs-loki/README.md` for plan
+## Current Phase: Phase 3 — CI/CD Ownership (Next up)
+See `03-cicd/README.md` for the planned scope. Not started yet.
+
+### Future phases
+- Phase 4: Log aggregation (Loki) — see `04-logs-loki/README.md`
 
 ### Incidents debugged so far (Phase 1)
 - Port 5000 conflict with local Docker registry → remapped Flask to 5001
@@ -80,11 +82,11 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 ```
 sre-lab/
 ├── 01-observability/   ← Phase 1 (DONE)
-├── 02-chaos/           ← Phase 2 (in progress — Exp 3 pending)
+├── 02-chaos/           ← Phase 2 (DONE — all 3 experiments validated end-to-end)
 │   ├── scripts/        ← chaos load generators
 │   ├── postmortems/    ← experiment writeups
 │   └── PROGRESS.md
-├── 03-cicd/            ← Phase 3 (PLANNED)
+├── 03-cicd/            ← Phase 3 (NEXT)
 └── 04-logs-loki/       ← Phase 4 (PLANNED)
 ```
 
