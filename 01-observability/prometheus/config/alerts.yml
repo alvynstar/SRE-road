@@ -1,6 +1,16 @@
 groups:
   - name: flask-app
     rules:
+      - alert: AppDown
+        expr: up{job="sre-lab-app"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flask app is unreachable"
+          description: "Prometheus cannot scrape the Flask app. The container may be down or the network is broken."
+          runbook_url: "https://github.com/toks/sre-lab/blob/main/01-observability/runbooks/HighErrorRate.md"
+
       - alert: HighErrorRate
         expr: rate(app_errors_total[1m]) > 0.7
         for: 1m
@@ -9,6 +19,7 @@ groups:
         annotations:
           summary: "High error rate on {{ $labels.endpoint }}"
           description: "Error rate is {{ $value | printf \"%.2f\" }} req/s — more than 7 out of 10 requests are failing."
+          runbook_url: "https://github.com/toks/sre-lab/blob/main/01-observability/runbooks/HighErrorRate.md"
 
       - alert: HighLatency
         expr: histogram_quantile(0.95, rate(app_request_duration_seconds_bucket[1m])) > 5.0
@@ -18,3 +29,4 @@ groups:
         annotations:
           summary: "High latency on {{ $labels.endpoint }}"
           description: "p95 latency is {{ $value | printf \"%.2f\" }}s — users are waiting over 5 seconds."
+          runbook_url: "https://github.com/toks/sre-lab/blob/main/01-observability/runbooks/HighLatency.md"

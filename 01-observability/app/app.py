@@ -40,5 +40,13 @@ def get_error():
     error_count.labels(endpoint='/api/error', status_code='500').inc()
     return jsonify({"status": "error", "message": "Simulated failure"}), 500
 
+@app.route('/api/slow', methods=['GET'])
+def get_slow():
+    """Endpoint that sleeps 6s — used to trigger HighLatency alert (threshold: p95 > 5s)"""
+    request_count.labels(method='GET', endpoint='/api/slow').inc()
+    with request_duration.labels(endpoint='/api/slow').time():
+        time.sleep(6)
+    return jsonify({"status": "success", "message": "Slow response simulated"}), 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)

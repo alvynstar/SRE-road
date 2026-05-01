@@ -136,12 +136,38 @@ Configured two alert rules in `prometheus/config/alerts.yml`:
 
 ---
 
+## AlertManager — Slack Integration
+
+Configured AlertManager to route Prometheus alerts to a Slack channel.
+
+**Files added:**
+- `alertmanager/alertmanager.yml` — routing rules and Slack receiver config
+- `docker-compose.yml` — added AlertManager service and wired Prometheus to it
+
+**Tested:** Triggered `HighErrorRate` — Slack notification received with alert summary and description.
+
+---
+
+## Runbooks
+
+Written for both alert rules and stored in `01-observability/runbooks/`:
+
+| Runbook | Alert | Location |
+|---|---|---|
+| HighErrorRate | Error rate > 0.7 req/s for 1m | `runbooks/HighErrorRate.md` |
+| HighLatency | p95 latency > 5s for 2m | `runbooks/HighLatency.md` |
+
+Each runbook covers: what the alert means, likely causes, investigation steps, remediation table, and escalation criteria.
+
+Alert rules updated with `runbook_url` annotations so on-call engineers can find the runbook directly from the alert.
+
 ## Next Steps
 
 - [x] Create a custom Grafana dashboard for the Flask app
 - [x] Add error metrics to the Flask app and simulate failures
 - [x] Configure Prometheus alert rules (latency, error rate)
-- [ ] Configure AlertManager to route alerts (Slack/email/PagerDuty)
-- [ ] Write a runbook for each alert
+- [x] Configure AlertManager to route alerts to Slack
+- [x] Write a runbook for each alert (HighErrorRate, HighLatency)
+- [x] Add runbook_url annotations to alert rules
 - [ ] Explore log aggregation with Loki
 - [ ] Simulate a K8s incident and practice incident response

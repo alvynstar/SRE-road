@@ -32,10 +32,24 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
     networks:
       - observability
     depends_on:
       - app
+
+  # AlertManager - Alert Routing
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: sre-lab-alertmanager
+    volumes:
+      - ./alertmanager/config:/etc/alertmanager
+    environment:
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    ports:
+      - "9093:9093"
+    networks:
+      - observability
 
   # Grafana - Visualization Platform
   grafana:

@@ -15,6 +15,9 @@ secrets/
 grafana/provisioning/datasources/*.yml
 !01-observability/grafana/provisioning/datasources/prometheus.yml
 
+# AlertManager config contains webhook URL secret
+01-observability/alertmanager/config/alertmanager.yml
+
 # Terraform state (contains secrets)
 *.tfstate
 *.tfstate.*
