@@ -1,0 +1,42 @@
+name: CI
+
+# Trigger this workflow on:
+# - Any pull request (so PRs are gated)
+# - Pushes to main (so direct commits are still validated)
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint and test Flask app
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: 01-observability/app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            01-observability/app/requirements.txt
+            01-observability/app/requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Run tests with pytest
+        run: pytest -v

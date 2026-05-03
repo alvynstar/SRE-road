@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, Response
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 import time
+
+from flask import Flask, Response, jsonify
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ def metrics():
 def get_data():
     """Sample API endpoint"""
     request_count.labels(method='GET', endpoint='/api/data').inc()
-    
+
     with request_duration.labels(endpoint='/api/data').time():
         time.sleep(0.1)  # Simulate some work
         return jsonify({
