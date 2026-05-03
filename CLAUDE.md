@@ -14,6 +14,9 @@ CI/CD ownership, incident management, chaos engineering.
 - Point out when I'm doing something non-SRE (e.g. manual fixes instead of automation)
 - Push me to write runbooks and postmortems for every incident simulation
 
+## Teaching Style
+Use a Socratic/mentorship approach: explain concepts and ask guiding questions before writing code. Treat me as a learner who wants to understand patterns, not just get working code.
+
 ## Phase 1 — Observability (COMPLETE)
 
 ### What was built
@@ -89,6 +92,16 @@ sre-lab/
 ├── 03-cicd/            ← Phase 3 (NEXT)
 └── 04-logs-loki/       ← Phase 4 (PLANNED)
 ```
+
+## Secrets & Env
+- Never commit API keys; always store in `.env` and verify `.env` is gitignored.
+- When reading `.env` values, check for stray quotes around keys (common bug source).
+- Before any `git push`, scan staged diff for secret-like strings.
+
+## Docker & CI Checks
+- Before running `docker build`, confirm `Dockerfile` exists and check `.dockerignore` won't exclude needed files (nginx.conf, config dirs).
+- For docker-compose volume mounts, mount the config directory, not just a single file, when multiple configs are referenced.
+- For GitHub Actions on Linux, proactively add system deps (portaudio, xvfb for Qt apps) before pushing.
 
 ## Session update reminder
 At the end of each session, update this file with what was completed and what's next.
