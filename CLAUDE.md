@@ -64,8 +64,32 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - `02-chaos/scripts/generate_latency.sh` — hits `/api/slow` continuously
 - `02-chaos/postmortems/` — postmortem templates (fill in live during each experiment)
 
-## Current Phase: Phase 3 — CI/CD Ownership (Next up)
-See `03-cicd/README.md` for the planned scope. Not started yet.
+---
+
+## Phase 3 — CI/CD Ownership (IN PROGRESS)
+
+### Sub-phases
+| # | Sub-phase | Status |
+|---|-----------|--------|
+| 3.1 | pytest + ruff + GitHub Actions CI | **COMPLETE** |
+| 3.2 | Docker build + push to GHCR | **COMPLETE** — image public at `ghcr.io/alvynstar/sre-lab-app`, validated end-to-end |
+| 3.3 | Deploy image to `sre-lab` kind cluster | **NEXT** |
+| 3.4 | Grafana deploy annotations | PLANNED |
+| 3.5 | Rollback drill + postmortem | PLANNED |
+
+### What was built (3.1 + 3.2)
+- pytest tests for Flask app under `01-observability/app/tests/`
+- ruff lint config; both lint + tests run on every PR and push to main
+- `docker-build-push` job in `.github/workflows/ci.yml` — builds on every event, pushes only on main
+- Image tagged with `sha-<short>` (immutable), `main`, `latest` on every push to main
+- GHCR package `sre-lab-app` made public — anonymous `docker pull` works
+- Branch protection on `main` — PR required, status checks must pass, direct pushes blocked
+- Repo flipped from private to public after secret-scan to enable free branch protection + unlimited Actions minutes
+
+### Key files
+- `.github/workflows/ci.yml` — CI workflow (lint+test → docker-build-push)
+- `01-observability/app/tests/` — pytest test files
+- `03-cicd/PROGRESS.md` — sub-phase log
 
 ### Future phases
 - Phase 4: Log aggregation (Loki) — see `04-logs-loki/README.md`
@@ -81,6 +105,11 @@ See `03-cicd/README.md` for the planned scope. Not started yet.
 - `AppDown` alert silently never fired → label mismatch (`job="flask-app"` vs `sre-lab-app`); fixed by aligning with `prometheus.yml` job name
 - Chaos script `generate_errors.sh` only sent 1/240 requests → `bc` not installed in Git Bash; replaced with native bash arithmetic (`COUNT=$((DURATION * RATE))`). Diagnosed with `bash -x` trace mode.
 
+### Issues debugged so far (Phase 3)
+- Classic GitHub branch protection silently doesn't enforce on private free-tier repos (banner: "won't be enforced until you move to GitHub Team or Enterprise"). Options: make repo public, switch to Repository Rulesets, or pay. Chose public after passing a full-history secret scan.
+- GHCR package created as **private by default** even when source repo is public. Anonymous `docker pull` fails until visibility flipped manually in package settings → Danger Zone → Public.
+- "Require approvals: 1" in branch protection blocks solo developers — GitHub does not let you approve your own PR. Set approvals to 0 (untick the sub-checkbox) and leave "Require a pull request" ticked to keep the PR-flow gate without the approval gate.
+
 ## Repo Structure (Roadmap View)
 ```
 sre-lab/
@@ -89,7 +118,7 @@ sre-lab/
 │   ├── scripts/        ← chaos load generators
 │   ├── postmortems/    ← experiment writeups
 │   └── PROGRESS.md
-├── 03-cicd/            ← Phase 3 (NEXT)
+├── 03-cicd/            ← Phase 3 (IN PROGRESS — 3.1 + 3.2 done; 3.3 next)
 └── 04-logs-loki/       ← Phase 4 (PLANNED)
 ```
 
