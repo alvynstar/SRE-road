@@ -47,17 +47,40 @@ For a public portfolio repo, flip it to public:
 - **GHA build was 51s on first PR run** thanks to layer cache (`type=gha`). Subsequent builds even faster when only `app.py` changes.
 - **Deprecation warning noted** on `actions/checkout@v4`, `setup-python@v5`, `docker/build-push-action@v6` (Node.js 20 EOL). Track for a future maintenance PR; not blocking.
 
-## 3.3 — Deploy to kind cluster (NEXT)
+## 3.3 — Deploy to kind cluster (DONE)
 
-### Goal
-Replace the Docker Compose Flask container with a Kubernetes Deployment that pulls the image from GHCR. The `sre-lab` kind cluster (already running for Phase 1's kube-prometheus-stack) becomes the runtime.
+### Implementation
+Created three Kubernetes manifests in `03-cicd/k8s/`:
 
-### Open questions to answer in the design phase
-- Plain manifests vs Helm chart vs Kustomize?
-- Namespace: deploy into `default`, `monitoring`, or new `sre-lab-app` namespace?
-- How does kind pull from GHCR (LoadBalancer? port-forward? ingress)?
-- ServiceMonitor wiring so kube-prometheus-stack scrapes the new pod
-- imagePullPolicy: `Always` vs `IfNotPresent` and what each means for deploys
+| File | Purpose |
+|---|---|
+| `deployment.yaml` | Runs 1 replica of `ghcr.io/alvynstar/sre-lab-app:latest` on port 5001 |
+| `service.yaml` | Exposes the pod internally on port 80 → 5001 (added `app: sre-lab-app` label for ServiceMonitor discovery) |
+| `servicemonitor.yaml` | Tells kube-prometheus-stack (Prometheus) to scrape the app on the `http` port every 30s |
+
+### Key decisions made
+- **Manifests:** Plain YAML files (simplest for learning, easy to version in git)
+- **Namespace:** `default` (same as Phase 1 stack for simplicity; production would use dedicated namespace)
+- **imagePullPolicy:** `Always` (pulls latest tag every time — ensures fresh image)
+- **Resources:** 128Mi—256Mi memory, 100m—500m CPU (prevents resource starvation)
+- **Service discovery:** ServiceMonitor labeled with `release: kube-prometheus-stack` so Prometheus picks it up
+
+### Validation evidence
+- [x] `kubectl apply` created Deployment + Service + ServiceMonitor without errors
+- [x] Pod status: `1/1 Running` within 22s (image pull + start)
+- [x] Health check: `curl http://localhost:8080/health` returns `{"status": "healthy"}`
+- [x] Prometheus targets list now includes `sre-lab-app` (verified via API)
+- [x] App metrics scraped: `app_requests_total` visible in Prometheus after generating traffic
+
+### Debugging steps taken
+1. **Initial ServiceMonitor not picked up:** Prometheus only watches ServiceMonitors with label `release: kube-prometheus-stack` (per kube-prometheus-stack config)
+2. **Service not matched by ServiceMonitor:** Service needed label `app: sre-lab-app` (not just selector, but metadata label)
+3. **Port mismatch initially:** Fixed by ensuring ServiceMonitor references `port: http` which exists in Service
+
+### Lessons learned
+- Kubernetes service discovery requires **explicit labels on both Service and ServiceMonitor** — not obvious from YAML syntax
+- `imagePullPolicy: Always` ensures dev/test workflows use fresh images, but production would use explicit SHA tags
+- Port naming in Services matters for ServiceMonitors — matching port names is less error-prone than port numbers
 
 ## 3.4 — Grafana deploy annotations (PLANNED)
 ## 3.5 — Rollback drill + postmortem (PLANNED)

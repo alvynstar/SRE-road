@@ -73,7 +73,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 |---|-----------|--------|
 | 3.1 | pytest + ruff + GitHub Actions CI | **COMPLETE** |
 | 3.2 | Docker build + push to GHCR | **COMPLETE** — image public at `ghcr.io/alvynstar/sre-lab-app`, validated end-to-end |
-| 3.3 | Deploy image to `sre-lab` kind cluster | **NEXT** |
+| 3.3 | Deploy image to `sre-lab` kind cluster | **COMPLETE** — Deployment + Service + ServiceMonitor created; Prometheus auto-scraping app |
 | 3.4 | Grafana deploy annotations | PLANNED |
 | 3.5 | Rollback drill + postmortem | PLANNED |
 
