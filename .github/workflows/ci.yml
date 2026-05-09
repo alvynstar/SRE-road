@@ -103,10 +103,7 @@ jobs:
 
       - name: Annotate Grafana
         run: |
-          curl -s -X POST http://localhost:3000/api/annotations \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.GRAFANA_TOKEN }}" \
-            -d "{
-              \"text\": \"Deployed sha-${{ github.sha }} to kind cluster\",
-              \"tags\": [\"deploy\", \"ci\"]
-            }"
+          curl.exe -s -X POST http://localhost:3000/api/annotations `
+            -H "Content-Type: application/json" `
+            -H "Authorization: Bearer ${{ secrets.GRAFANA_TOKEN }}" `
+            -d "{\"text\": \"Deployed sha-${{ github.sha }} to kind cluster\", \"tags\": [\"deploy\", \"ci\"]}"
