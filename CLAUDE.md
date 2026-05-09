@@ -66,7 +66,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 
 ---
 
-## Phase 3 — CI/CD Ownership (IN PROGRESS)
+## Phase 3 — CI/CD Ownership (COMPLETE)
 
 ### Sub-phases
 | # | Sub-phase | Status |
@@ -75,7 +75,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 | 3.2 | Docker build + push to GHCR | **COMPLETE** — image public at `ghcr.io/alvynstar/sre-lab-app`, validated end-to-end |
 | 3.3 | Deploy image to `sre-lab` kind cluster | **COMPLETE** — Deployment + Service + ServiceMonitor created; Prometheus auto-scraping app |
 | 3.4 | Grafana deploy annotations | **COMPLETE** — vertical annotation line on Four Golden Signals dashboard after every deploy |
-| 3.5 | Rollback drill + postmortem | PLANNED |
+| 3.5 | Rollback drill + postmortem | **COMPLETE** — bad deploy simulated, error spike observed in Grafana, rolled back via git revert; postmortem written |
 
 ### What was built (3.1 + 3.2)
 - pytest tests for Flask app under `01-observability/app/tests/`
@@ -94,25 +94,24 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 ### Future phases
 - Phase 4: Log aggregation (Loki) — see `04-logs-loki/README.md`
 
-### Incidents debugged so far (Phase 1)
-- Port 5000 conflict with local Docker registry → remapped Flask to 5001
-- Prometheus scrape returning HTML instead of metrics → fixed Content-Type header
-- Stale scrape config after port change → updated prometheus.yml
-- kind cluster EOF after 13 months → created fresh sre-lab cluster
+### Key lessons learned
 
-### Issues debugged so far (Phase 2)
-- Prometheus lifecycle API disabled by default → added `--web.enable-lifecycle` flag and recreated container (`docker-compose up -d --force-recreate prometheus`, not `restart`)
-- `AppDown` alert silently never fired → label mismatch (`job="flask-app"` vs `sre-lab-app`); fixed by aligning with `prometheus.yml` job name
-- Chaos script `generate_errors.sh` only sent 1/240 requests → `bc` not installed in Git Bash; replaced with native bash arithmetic (`COUNT=$((DURATION * RATE))`). Diagnosed with `bash -x` trace mode.
+**Prometheus / Alerting**
+- Always validate alert expressions in Prometheus graph view before trusting them — label mismatches cause silent failures
+- `docker-compose up -d --force-recreate <service>` (not `restart`) is required after adding new flags like `--web.enable-lifecycle`
 
-### Issues debugged so far (Phase 3)
-- Classic GitHub branch protection silently doesn't enforce on private free-tier repos (banner: "won't be enforced until you move to GitHub Team or Enterprise"). Options: make repo public, switch to Repository Rulesets, or pay. Chose public after passing a full-history secret scan.
-- GHCR package created as **private by default** even when source repo is public. Anonymous `docker pull` fails until visibility flipped manually in package settings → Danger Zone → Public.
-- "Require approvals: 1" in branch protection blocks solo developers — GitHub does not let you approve your own PR. Set approvals to 0 (untick the sub-checkbox) and leave "Require a pull request" ticked to keep the PR-flow gate without the approval gate.
-- Self-hosted runner on Windows: `curl` is an alias for `Invoke-WebRequest` in PowerShell — use `Invoke-RestMethod` for API calls instead.
-- `shell: bash` on a Windows runner without WSL installed points to WSL bash (`C:\Windows\system32\bash.EXE`) which fails if no distro is installed — use native PowerShell instead.
-- Grafana service account token stored via pipe (`|`) in PowerShell adds a trailing newline — use `gh secret set --body "token"` to avoid this.
-- Grafana global annotations (no `dashboardUID`) do not render on dashboards by default — must specify `dashboardUID` in the annotation payload to pin it to the correct dashboard.
+**GitHub / CI**
+- GHCR packages are **private by default** even when the source repo is public — flip visibility manually in package settings
+- Branch protection on free-tier private repos is not enforced — make repo public or use Repository Rulesets
+- On Windows self-hosted runners: use `Invoke-RestMethod` instead of `curl`; avoid `shell: bash` unless WSL is installed
+- Store secrets via `gh secret set --body "value"` — piping via `|` adds a trailing newline that breaks tokens
+
+**Kubernetes**
+- Using `latest` image tag means `kubectl rollout undo` has no history to roll back to — use SHA tags in production deployments
+- ServiceMonitor requires label `release: kube-prometheus-stack` and matching port names to be picked up by Prometheus
+
+**Grafana**
+- Annotations must include `dashboardUID` to appear on a specific dashboard — global annotations (no UID) are hidden by default
 
 ## Repo Structure (Roadmap View)
 ```
@@ -122,7 +121,7 @@ sre-lab/
 │   ├── scripts/        ← chaos load generators
 │   ├── postmortems/    ← experiment writeups
 │   └── PROGRESS.md
-├── 03-cicd/            ← Phase 3 (IN PROGRESS — 3.1–3.4 done; 3.5 next)
+├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
 └── 04-logs-loki/       ← Phase 4 (PLANNED)
 ```
 
