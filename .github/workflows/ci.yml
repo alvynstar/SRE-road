@@ -104,6 +104,7 @@ jobs:
       - name: Annotate Grafana
         run: |
           $body = @{
+            dashboardUID = "flask-golden-signals"
             text = "Deployed sha-${{ github.sha }} to kind cluster"
             tags = @("deploy", "ci")
           } | ConvertTo-Json
