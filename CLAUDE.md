@@ -74,7 +74,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 | 3.1 | pytest + ruff + GitHub Actions CI | **COMPLETE** |
 | 3.2 | Docker build + push to GHCR | **COMPLETE** — image public at `ghcr.io/alvynstar/sre-lab-app`, validated end-to-end |
 | 3.3 | Deploy image to `sre-lab` kind cluster | **COMPLETE** — Deployment + Service + ServiceMonitor created; Prometheus auto-scraping app |
-| 3.4 | Grafana deploy annotations | PLANNED |
+| 3.4 | Grafana deploy annotations | **COMPLETE** — vertical annotation line on Four Golden Signals dashboard after every deploy |
 | 3.5 | Rollback drill + postmortem | PLANNED |
 
 ### What was built (3.1 + 3.2)
@@ -109,6 +109,10 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - Classic GitHub branch protection silently doesn't enforce on private free-tier repos (banner: "won't be enforced until you move to GitHub Team or Enterprise"). Options: make repo public, switch to Repository Rulesets, or pay. Chose public after passing a full-history secret scan.
 - GHCR package created as **private by default** even when source repo is public. Anonymous `docker pull` fails until visibility flipped manually in package settings → Danger Zone → Public.
 - "Require approvals: 1" in branch protection blocks solo developers — GitHub does not let you approve your own PR. Set approvals to 0 (untick the sub-checkbox) and leave "Require a pull request" ticked to keep the PR-flow gate without the approval gate.
+- Self-hosted runner on Windows: `curl` is an alias for `Invoke-WebRequest` in PowerShell — use `Invoke-RestMethod` for API calls instead.
+- `shell: bash` on a Windows runner without WSL installed points to WSL bash (`C:\Windows\system32\bash.EXE`) which fails if no distro is installed — use native PowerShell instead.
+- Grafana service account token stored via pipe (`|`) in PowerShell adds a trailing newline — use `gh secret set --body "token"` to avoid this.
+- Grafana global annotations (no `dashboardUID`) do not render on dashboards by default — must specify `dashboardUID` in the annotation payload to pin it to the correct dashboard.
 
 ## Repo Structure (Roadmap View)
 ```
@@ -118,7 +122,7 @@ sre-lab/
 │   ├── scripts/        ← chaos load generators
 │   ├── postmortems/    ← experiment writeups
 │   └── PROGRESS.md
-├── 03-cicd/            ← Phase 3 (IN PROGRESS — 3.1 + 3.2 done; 3.3 next)
+├── 03-cicd/            ← Phase 3 (IN PROGRESS — 3.1–3.4 done; 3.5 next)
 └── 04-logs-loki/       ← Phase 4 (PLANNED)
 ```
 
