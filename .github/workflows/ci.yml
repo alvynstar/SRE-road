@@ -102,9 +102,13 @@ jobs:
         run: kubectl rollout status deployment/sre-lab-app --timeout=120s
 
       - name: Annotate Grafana
-        shell: bash
         run: |
-          curl -s -X POST http://localhost:3000/api/annotations \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.GRAFANA_TOKEN }}" \
-            -d "{\"text\": \"Deployed sha-${{ github.sha }} to kind cluster\", \"tags\": [\"deploy\", \"ci\"]}"
+          $body = @{
+            text = "Deployed sha-${{ github.sha }} to kind cluster"
+            tags = @("deploy", "ci")
+          } | ConvertTo-Json
+          $headers = @{
+            "Content-Type" = "application/json"
+            "Authorization" = "Bearer ${{ secrets.GRAFANA_TOKEN }}"
+          }
+          Invoke-RestMethod -Uri http://localhost:3000/api/annotations -Method Post -Headers $headers -Body $body
