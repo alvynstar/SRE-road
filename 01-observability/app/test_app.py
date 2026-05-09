@@ -39,13 +39,11 @@ def test_metrics_returns_prometheus_format(client):
 
 
 def test_data_returns_success(client):
-    """/api/data: happy path — 200 with success JSON shape."""
+    """/api/data: BAD DEPLOY — returns 500 (rollback drill, Phase 3.5)."""
     response = client.get("/api/data")
-    assert response.status_code == 200
+    assert response.status_code == 500
     payload = response.get_json()
-    assert payload["status"] == "success"
-    assert "message" in payload["data"]
-    assert "timestamp" in payload["data"]
+    assert payload["status"] == "error"
 
 
 def test_error_returns_500(client):
