@@ -91,9 +91,6 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - `01-observability/app/tests/` — pytest test files
 - `03-cicd/PROGRESS.md` — sub-phase log
 
-### Future phases
-- Phase 4: Log aggregation (Loki) — see `04-logs-loki/README.md`
-
 ### Key lessons learned
 
 **Prometheus / Alerting**
@@ -112,6 +109,36 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 
 **Grafana**
 - Annotations must include `dashboardUID` to appear on a specific dashboard — global annotations (no UID) are hidden by default
+- Datasource provisioning fails with "data source not found" when `grafana_data` volume has old auto-generated UIDs conflicting with explicit `uid:` fields — fix by deleting the volume so Grafana recreates from provisioning files
+- Deleting `grafana_data` volume invalidates all existing API tokens — regenerate service account token and update GitHub secret after any volume wipe
+
+---
+
+## Phase 4 — Log Aggregation with Loki (COMPLETE)
+
+### Sub-phases
+| # | Sub-phase | Status |
+|---|-----------|--------|
+| 4.1 | Add Loki + Promtail to Docker Compose | **COMPLETE** — logs flowing from container to Loki |
+| 4.2 | Structured JSON logging in Flask app | **COMPLETE** — `python-json-logger` emitting `levelname`, `endpoint`, `status`, `duration` |
+| 4.3 | Validate log pipeline with LogQL | **COMPLETE** — filtered logs by level and endpoint in Grafana Explore |
+| 4.4 | Combined metrics + logs dashboard | **COMPLETE** — "Flask App — Metrics + Logs" dashboard with 4 panels |
+
+### What was built
+- Loki single-node config (`04-logs-loki/loki/loki-config.yml`) — filesystem storage, schema v13, auth disabled
+- Promtail config (`04-logs-loki/promtail/promtail-config.yml`) — Docker service discovery, JSON pipeline stage extracting `level`/`endpoint`/`status` as labels
+- Flask app emits structured JSON logs on every request using `python-json-logger`
+- Grafana Loki datasource provisioned with `uid: loki` to match dashboard references
+- Combined dashboard (`flask-logs-and-metrics.json`) — Error Rate, Traffic, Latency p95 (Prometheus) + App Logs (Loki)
+
+### Key files
+- `04-logs-loki/loki/loki-config.yml` — Loki config
+- `04-logs-loki/promtail/promtail-config.yml` — Promtail config
+- `01-observability/app/app.py` — Flask app with structured JSON logging
+- `01-observability/grafana/dashboards/flask-logs-and-metrics.json` — combined dashboard
+- `01-observability/grafana/provisioning/datasources/prometheus.yml` — Prometheus + Loki datasources
+
+---
 
 ## Repo Structure (Roadmap View)
 ```
@@ -122,7 +149,7 @@ sre-lab/
 │   ├── postmortems/    ← experiment writeups
 │   └── PROGRESS.md
 ├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
-└── 04-logs-loki/       ← Phase 4 (PLANNED)
+└── 04-logs-loki/       ← Phase 4 (DONE — all 4 sub-phases complete)
 ```
 
 ## Secrets & Env
