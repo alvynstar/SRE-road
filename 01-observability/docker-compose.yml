@@ -69,6 +69,33 @@ services:
       - observability
     depends_on:
       - prometheus
+      - loki
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: sre-lab-loki
+    volumes:
+      - ../04-logs-loki/loki:/etc/loki
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yml
+    networks:
+      - observability
+
+  # Promtail - Log Collector
+  promtail:
+    image: grafana/promtail:latest
+    container_name: sre-lab-promtail
+    volumes:
+      - ../04-logs-loki/promtail:/etc/promtail
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/promtail-config.yml
+    networks:
+      - observability
+    depends_on:
+      - loki
 
 networks:
   observability:
@@ -78,4 +105,6 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  loki_data:
     driver: local
