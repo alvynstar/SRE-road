@@ -22,11 +22,18 @@ def metrics():
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
-    """BAD DEPLOY: intentionally returns 500 to simulate broken release"""
+    """Sample API endpoint"""
     request_count.labels(method='GET', endpoint='/api/data').inc()
-    error_count.labels(endpoint='/api/data', status_code='500').inc()
-    return jsonify({"status": "error", "message": "Bad deploy simulation"}), 500
 
+    with request_duration.labels(endpoint='/api/data').time():
+        time.sleep(0.1)  # Simulate some work
+        return jsonify({
+            "status": "success",
+            "data": {
+                "message": "Hello from SRE Lab Phase 1",
+                "timestamp": time.time()
+            }
+        }), 200
 
 @app.route('/api/error', methods=['GET'])
 def get_error():
