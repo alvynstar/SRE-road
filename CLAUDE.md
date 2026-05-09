@@ -66,7 +66,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 
 ---
 
-## Phase 3 — CI/CD Ownership (IN PROGRESS)
+## Phase 3 — CI/CD Ownership (COMPLETE)
 
 ### Sub-phases
 | # | Sub-phase | Status |
@@ -75,7 +75,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 | 3.2 | Docker build + push to GHCR | **COMPLETE** — image public at `ghcr.io/alvynstar/sre-lab-app`, validated end-to-end |
 | 3.3 | Deploy image to `sre-lab` kind cluster | **COMPLETE** — Deployment + Service + ServiceMonitor created; Prometheus auto-scraping app |
 | 3.4 | Grafana deploy annotations | **COMPLETE** — vertical annotation line on Four Golden Signals dashboard after every deploy |
-| 3.5 | Rollback drill + postmortem | PLANNED |
+| 3.5 | Rollback drill + postmortem | **COMPLETE** — bad deploy simulated, error spike observed in Grafana, rolled back via git revert; postmortem written |
 
 ### What was built (3.1 + 3.2)
 - pytest tests for Flask app under `01-observability/app/tests/`
@@ -122,7 +122,7 @@ sre-lab/
 │   ├── scripts/        ← chaos load generators
 │   ├── postmortems/    ← experiment writeups
 │   └── PROGRESS.md
-├── 03-cicd/            ← Phase 3 (IN PROGRESS — 3.1–3.4 done; 3.5 next)
+├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
 └── 04-logs-loki/       ← Phase 4 (PLANNED)
 ```
 
