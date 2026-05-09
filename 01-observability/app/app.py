@@ -1,7 +1,7 @@
 import logging
 import time
 
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pythonjsonlogger import jsonlogger
 
