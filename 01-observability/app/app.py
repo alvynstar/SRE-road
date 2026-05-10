@@ -50,9 +50,11 @@ def get_data():
 
 @app.route('/api/error', methods=['GET'])
 def get_error():
+    request_count.labels(method='GET', endpoint='/api/error').inc()
     error_count.labels(endpoint='/api/error', status_code='500').inc()
-    logger.error("request", extra={"endpoint": "/api/error", "status": 500})
-    return jsonify({"status": "error", "message": "Simulated failure"}), 500
+    with request_duration.labels(endpoint='/api/error').time():
+        logger.error("request", extra={"endpoint": "/api/error", "status": 500})
+        return jsonify({"status": "error", "message": "Simulated failure"}), 500
 
 
 @app.route('/api/slow', methods=['GET'])
