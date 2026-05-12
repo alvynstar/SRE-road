@@ -173,6 +173,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - Validated at 61.5x burn rate with `SloBudgetFastBurn` firing in Prometheus
 
 ### Key files
+- `05-reliability/PROGRESS.md` — phase log
 - `01-observability/prometheus/config/slo-rules.yml` — recording rules
 - `01-observability/prometheus/config/alerts.yml` — burn rate alert group added
 - `01-observability/grafana/dashboards/slo-dashboard.json` — SLO dashboard
@@ -199,7 +200,7 @@ sre-lab/
 │   └── PROGRESS.md
 ├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
 ├── 04-logs-loki/       ← Phase 4 (DONE — all 5 sub-phases complete)
-└── 05-slos/            ← Phase 5 (DONE — SLOs, error budget dashboard, burn rate alerts)
+└── 05-reliability/     ← Phase 5 (DONE — SLOs, error budget dashboard, burn rate alerts)
 ```
 
 ## Secrets & Env
