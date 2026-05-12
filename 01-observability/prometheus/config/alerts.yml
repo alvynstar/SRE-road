@@ -30,3 +30,25 @@ groups:
           summary: "High latency on {{ $labels.endpoint }}"
           description: "p95 latency is {{ $value | printf \"%.2f\" }}s — users are waiting over 5 seconds."
           runbook_url: "https://github.com/toks/sre-lab/blob/main/01-observability/runbooks/HighLatency.md"
+
+  - name: slo_burn_rate
+    rules:
+      - alert: SloBudgetFastBurn
+        expr: |
+          (1 - slo:availability:rate1h) / 0.01 > 14.4
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error budget burning too fast"
+          description: "Burn rate is {{ $value | printf \"%.1f\" }}x — at this rate the monthly error budget will be exhausted in less than 2 days. Immediate action required."
+
+      - alert: SloBudgetSlowBurn
+        expr: |
+          (1 - slo:availability:rate1h) / 0.01 > 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Error budget burning steadily"
+          description: "Burn rate is {{ $value | printf \"%.1f\" }}x — budget is being consumed faster than the 30-day window allows. Investigate and fix before budget runs out."

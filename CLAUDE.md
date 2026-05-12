@@ -156,7 +156,37 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 
 ---
 
-## Phase 5 — SLOs & Error Budgets (PLANNED)
+## Phase 5 — SLOs & Error Budgets (COMPLETE)
+
+### Sub-phases
+| # | Sub-phase | Status |
+|---|-----------|--------|
+| 5.1 | Define SLOs (availability + latency) | **COMPLETE** — 99% availability, p95 < 300ms |
+| 5.2 | Prometheus recording rules | **COMPLETE** — `slo:availability:rate5m/1h`, `slo:latency_p95:rate5m`, `slo:error_budget_remaining:rate1h` |
+| 5.3 | Error budget Grafana dashboard | **COMPLETE** — availability gauge, error budget gauge, SLO target, latency p95 + timeseries panels |
+| 5.4 | Burn rate alerts | **COMPLETE** — `SloBudgetFastBurn` (>14.4x for 2m) and `SloBudgetSlowBurn` (>1x for 15m) validated firing |
+
+### What was built
+- SLO recording rules (`slo-rules.yml`) — pre-computed SLIs stored as metrics for efficient querying
+- SLO dashboard (`slo-dashboard.json`) — 6 panels: availability gauge, error budget gauge, SLO target, latency p95, and two timeseries with SLO target lines
+- Burn rate alerts in `alerts.yml` — FastBurn fires when budget exhausted in < 2 days; SlowBurn fires when burning steadily
+- Validated at 61.5x burn rate with `SloBudgetFastBurn` firing in Prometheus
+
+### Key files
+- `05-reliability/PROGRESS.md` — phase log
+- `01-observability/prometheus/config/slo-rules.yml` — recording rules
+- `01-observability/prometheus/config/alerts.yml` — burn rate alert group added
+- `01-observability/grafana/dashboards/slo-dashboard.json` — SLO dashboard
+
+### Key lessons learned (Phase 5)
+- SLI = measurement, SLO = target, error budget = allowed failure room — these three concepts drive all SRE reliability decisions
+- Recording rules pre-compute expensive PromQL expressions so dashboards stay fast at scale
+- Burn rate > 14.4x = page now (budget gone in 2 days); burn rate > 1x = ticket (budget draining steadily)
+- `rate()` needs at least 2 Prometheus scrapes — NaN means not enough history yet, not a bug
+
+---
+
+## Phase 6 — (PLANNED)
 
 ---
 
@@ -170,7 +200,7 @@ sre-lab/
 │   └── PROGRESS.md
 ├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
 ├── 04-logs-loki/       ← Phase 4 (DONE — all 5 sub-phases complete)
-└── 05-slos/            ← Phase 5 (PLANNED)
+└── 05-reliability/     ← Phase 5 (DONE — SLOs, error budget dashboard, burn rate alerts)
 ```
 
 ## Secrets & Env

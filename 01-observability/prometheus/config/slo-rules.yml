@@ -1,0 +1,30 @@
+groups:
+  - name: slo_rules
+    interval: 15s
+    rules:
+      # Availability SLI: ratio of successful requests over 5m
+      - record: slo:availability:rate5m
+        expr: |
+          (
+            sum(rate(app_requests_total[5m])) - sum(rate(app_errors_total[5m]))
+          ) / sum(rate(app_requests_total[5m]))
+
+      # Availability SLI over 1h window (for burn rate alerting)
+      - record: slo:availability:rate1h
+        expr: |
+          (
+            sum(rate(app_requests_total[1h])) - sum(rate(app_errors_total[1h]))
+          ) / sum(rate(app_requests_total[1h]))
+
+      # Latency SLI: p95 request duration over 5m
+      - record: slo:latency_p95:rate5m
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(app_request_duration_seconds_bucket[5m])) by (le)
+          )
+
+      # Error budget remaining: how much of the 1% budget is left (SLO = 99%)
+      # 1.0 = full budget remaining, 0.0 = budget exhausted
+      - record: slo:error_budget_remaining:rate1h
+        expr: |
+          (slo:availability:rate1h - 0.99) / (1 - 0.99)
