@@ -131,12 +131,32 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - Grafana Loki datasource provisioned with `uid: loki` to match dashboard references
 - Combined dashboard (`flask-logs-and-metrics.json`) — Error Rate, Traffic, Latency p95 (Prometheus) + App Logs (Loki)
 
+### Sub-phases (updated)
+| # | Sub-phase | Status |
+|---|-----------|--------|
+| 4.1 | Add Loki + Promtail to Docker Compose | **COMPLETE** |
+| 4.2 | Structured JSON logging in Flask app | **COMPLETE** |
+| 4.3 | Validate log pipeline with LogQL | **COMPLETE** |
+| 4.4 | Combined metrics + logs dashboard | **COMPLETE** |
+| 4.5 | Re-run chaos experiment + LogQL investigation | **COMPLETE** — correlated Prometheus spike with Loki logs; fixed instrumentation gap on `/api/error` |
+
 ### Key files
 - `04-logs-loki/loki/loki-config.yml` — Loki config
 - `04-logs-loki/promtail/promtail-config.yml` — Promtail config
 - `01-observability/app/app.py` — Flask app with structured JSON logging
 - `01-observability/grafana/dashboards/flask-logs-and-metrics.json` — combined dashboard
 - `01-observability/grafana/provisioning/datasources/prometheus.yml` — Prometheus + Loki datasources
+- `04-logs-loki/postmortems/phase-4.5-loki-chaos-investigation.md` — postmortem with LogQL queries
+
+### Key lessons learned (Phase 4)
+- Metrics give you the alarm; logs give you the evidence — you need both to investigate an incident
+- LogQL filter syntax: `{container="/sre-lab-app"} | json | levelname = \`ERROR\``
+- Error endpoints must also record `request_count` and `request_duration` — omitting them creates dashboard blind spots
+- Correlate Loki log volume bar chart with Prometheus spike to confirm both signals track the same event
+
+---
+
+## Phase 5 — SLOs & Error Budgets (PLANNED)
 
 ---
 
@@ -149,7 +169,8 @@ sre-lab/
 │   ├── postmortems/    ← experiment writeups
 │   └── PROGRESS.md
 ├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
-└── 04-logs-loki/       ← Phase 4 (DONE — all 4 sub-phases complete)
+├── 04-logs-loki/       ← Phase 4 (DONE — all 5 sub-phases complete)
+└── 05-slos/            ← Phase 5 (PLANNED)
 ```
 
 ## Secrets & Env
