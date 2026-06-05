@@ -81,7 +81,7 @@ services:
     container_name: sre-lab-tempo
     volumes:
       - ../06-tracing/tempo:/etc/tempo
-      - tempo_data:/tmp/tempo
+      - tempo_data:/var/tempo
     command: -config.file=/etc/tempo/tempo-config.yml
     ports:
       - "3200:3200"   # Tempo HTTP API
