@@ -186,7 +186,41 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 
 ---
 
-## Phase 6 — (PLANNED)
+## Phase 6 — Distributed Tracing with Tempo & OpenTelemetry (COMPLETE)
+
+### What was built
+- OpenTelemetry SDK fully instrumented in Flask app (lines 6–24 of `app.py`)
+- Auto-instrumentation wraps all HTTP routes automatically — no manual route instrumentation needed
+- `TraceIdFilter` class injects `trace_id` and `span_id` into every JSON log line for log-to-trace correlation
+- Manual `artificial_delay` span on `/api/slow` route to show child span nesting
+- Error span on `/api/error` route with exception recording and error status marking
+- Tempo backend configured and running on ports 4317 (OTLP gRPC), 4318 (OTLP HTTP), 3200 (API)
+- Infrastructure fixes: app `depends_on: tempo`, explicit `OTEL_EXPORTER_OTLP_ENDPOINT` env var, persistent `tempo_data` volume
+- Grafana Tempo datasource provisioned, Loki derived fields enable one-click log→trace jumps
+- End-to-end validation: waterfall view in Grafana, log-to-trace correlation working, error traces marked red
+
+### Sub-phases
+| # | Sub-phase | Status |
+|---|-----------|--------|
+| 6.1 | Concepts & architecture | **COMPLETE** — trace/span/trace_id mental model in CONCEPTS.md |
+| 6.2 | Infrastructure gaps fixed | **COMPLETE** — startup ordering, persistent storage, explicit env vars |
+| 6.3 | End-to-end validation | **COMPLETE** — waterfall view, log-to-trace jumps, error marking all working |
+
+### Key files
+- `01-observability/app/app.py` — Flask app with OTel SDK setup, auto-instrumentation, manual spans, error recording
+- `01-observability/docker-compose.yml` — Tempo service, app `depends_on: tempo`, OTEL env var, persistent volume
+- `06-tracing/tempo/tempo-config.yml` — Tempo configuration (OTLP receivers, local filesystem storage)
+- `06-tracing/PROGRESS.md` — Phase 6 detailed progress log with validation results
+- `06-tracing/CONCEPTS.md` — Educational reference for traces, spans, waterfall views
+- `01-observability/grafana/provisioning/datasources/prometheus.yml` — Tempo datasource + Loki derived fields
+
+### Key lessons learned
+- **Traces = request journey**: Every request gets a tracking number (trace_id), every operation is a span. The waterfall shows exactly where time went.
+- **Log-to-trace correlation is the SRE superpower**: Injecting trace_id into logs + derived fields enables one-click jumps from "error in logs" to "full request breakdown" without changing interfaces.
+- **Startup ordering matters**: `depends_on: tempo` ensures Tempo is listening before the app tries to send spans. Without it, early spans are silently lost.
+- **Infrastructure wiring belongs in config**: Moving `OTEL_EXPORTER_OTLP_ENDPOINT` from hardcoded defaults to explicit env var makes the tracing target visible and environment-overridable.
+- **Persistent storage for observability**: Named volumes for Tempo preserve trace history across restarts. Same principle as Prometheus and Loki.
+- **Error spans must be marked**: Recording exceptions and setting error status makes failed requests visually distinct in waterfalls — critical for incident investigation.
 
 ---
 
@@ -200,7 +234,8 @@ sre-lab/
 │   └── PROGRESS.md
 ├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
 ├── 04-logs-loki/       ← Phase 4 (DONE — all 5 sub-phases complete)
-└── 05-reliability/     ← Phase 5 (DONE — SLOs, error budget dashboard, burn rate alerts)
+├── 05-reliability/     ← Phase 5 (DONE — SLOs, error budget dashboard, burn rate alerts)
+└── 06-tracing/         ← Phase 6 (DONE — distributed tracing with Tempo + OTel)
 ```
 
 ## Secrets & Env

@@ -9,6 +9,7 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace import StatusCode
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from pythonjsonlogger import jsonlogger
 
@@ -80,8 +81,12 @@ def get_error():
     request_count.labels(method='GET', endpoint='/api/error').inc()
     error_count.labels(endpoint='/api/error', status_code='500').inc()
     with request_duration.labels(endpoint='/api/error').time():
-        logger.error("request", extra={"endpoint": "/api/error", "status": 500})
-        return jsonify({"status": "error", "message": "Simulated failure"}), 500
+        with tracer.start_as_current_span("simulated_error") as span:
+            exc = Exception("Simulated failure")
+            span.record_exception(exc)
+            span.set_status(StatusCode.ERROR, "Simulated 500")
+            logger.error("request", extra={"endpoint": "/api/error", "status": 500})
+            return jsonify({"status": "error", "message": "Simulated failure"}), 500
 
 
 @app.route('/api/slow', methods=['GET'])

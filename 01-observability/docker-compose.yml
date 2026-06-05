@@ -12,8 +12,11 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_APP=app.py
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4317
     networks:
       - observability
+    depends_on:
+      - tempo
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 10s
@@ -78,6 +81,7 @@ services:
     container_name: sre-lab-tempo
     volumes:
       - ../06-tracing/tempo:/etc/tempo
+      - tempo_data:/tmp/tempo
     command: -config.file=/etc/tempo/tempo-config.yml
     ports:
       - "3200:3200"   # Tempo HTTP API
@@ -122,4 +126,6 @@ volumes:
   grafana_data:
     driver: local
   loki_data:
+    driver: local
+  tempo_data:
     driver: local
