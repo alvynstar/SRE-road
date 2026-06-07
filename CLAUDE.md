@@ -198,6 +198,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - Infrastructure fixes: app `depends_on: tempo`, explicit `OTEL_EXPORTER_OTLP_ENDPOINT` env var, persistent `tempo_data` volume
 - Grafana Tempo datasource provisioned, Loki derived fields enable one-click log→trace jumps
 - End-to-end validation: waterfall view in Grafana, log-to-trace correlation working, error traces marked red
+- **Portfolio documentation**: CONCEPTS.md enhanced with "Why This Matters" intro + practical Grafana walkthrough; PHASE-SUMMARY.md created for interview talking points
 
 ### Sub-phases
 | # | Sub-phase | Status |
@@ -205,14 +206,31 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 | 6.1 | Concepts & architecture | **COMPLETE** — trace/span/trace_id mental model in CONCEPTS.md |
 | 6.2 | Infrastructure gaps fixed | **COMPLETE** — startup ordering, persistent storage, explicit env vars |
 | 6.3 | End-to-end validation | **COMPLETE** — waterfall view, log-to-trace jumps, error marking all working |
+| 6.4 | Portfolio documentation | **COMPLETE** — CONCEPTS.md enhanced for interviews; PHASE-SUMMARY.md with "why this matters" + skills demonstrated |
 
 ### Key files
 - `01-observability/app/app.py` — Flask app with OTel SDK setup, auto-instrumentation, manual spans, error recording
 - `01-observability/docker-compose.yml` — Tempo service, app `depends_on: tempo`, OTEL env var, persistent volume
 - `06-tracing/tempo/tempo-config.yml` — Tempo configuration (OTLP receivers, local filesystem storage)
 - `06-tracing/PROGRESS.md` — Phase 6 detailed progress log with validation results
-- `06-tracing/CONCEPTS.md` — Educational reference for traces, spans, waterfall views
+- `06-tracing/CONCEPTS.md` — **ENHANCED** Educational reference: mental models, architecture, practical Grafana walkthrough ("How to Read a Waterfall")
+- `06-tracing/PHASE-SUMMARY.md` — **NEW** Portfolio summary: what was built, why it matters for SRE, skills demonstrated, interview talking points, team discussion points
 - `01-observability/grafana/provisioning/datasources/prometheus.yml` — Tempo datasource + Loki derived fields
+
+### Portfolio Angle
+Phase 6 completes the observability triangle. You can now answer:
+- **Metrics:** "Is it broken?" (Phase 1–3)
+- **Logs:** "What happened?" (Phase 4)
+- **Traces:** "Where is it slow?" (Phase 6)
+
+All three are wired together via `trace_id` in JSON logs + Grafana derived fields. This demonstrates:
+- ✅ Multi-pillar observability (not just "we use Prometheus")
+- ✅ Request lifecycle understanding (why a 6-second request takes 6 seconds)
+- ✅ Application-level instrumentation (OTel SDK, not just infra metrics)
+- ✅ Correlation patterns (logs ↔ traces via trace_id injected into JSON)
+- ✅ SRE problem-solving mindset (tools serve a purpose: debug issues faster)
+
+**Interview talking point:** *"Metrics tell you when something broke. Logs tell you what broke. Traces tell you where it's slow. Here's how I correlate all three with a trace_id in JSON logs and one click in Grafana."*
 
 ### Key lessons learned
 - **Traces = request journey**: Every request gets a tracking number (trace_id), every operation is a span. The waterfall shows exactly where time went.
@@ -221,6 +239,7 @@ Deliberately breaking the Phase 1 stack in controlled ways to validate that moni
 - **Infrastructure wiring belongs in config**: Moving `OTEL_EXPORTER_OTLP_ENDPOINT` from hardcoded defaults to explicit env var makes the tracing target visible and environment-overridable.
 - **Persistent storage for observability**: Named volumes for Tempo preserve trace history across restarts. Same principle as Prometheus and Loki.
 - **Error spans must be marked**: Recording exceptions and setting error status makes failed requests visually distinct in waterfalls — critical for incident investigation.
+- **Portfolio narrative > implementation details**: Document *why* something matters (for SREs, for interviews) before *how* it works. PHASE-SUMMARY.md is more valuable than code samples alone for portfolio review.
 
 ---
 

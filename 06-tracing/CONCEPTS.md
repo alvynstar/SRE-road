@@ -1,7 +1,23 @@
 # Phase 6 — Distributed Tracing (Concepts)
 
+## Why This Matters (for SREs)
+
+**Metrics tell you _when_ something broke. Logs tell you _what_ broke. Traces tell you _where_ it's slow.**
+
+In a monolith, a slow request is easy to debug — you just look at the code. But in a distributed system (microservices, multiple database queries, external API calls), a request bounces through multiple services, each adding latency. A slow request might be due to:
+- A database query that started at 5ms but took 3 seconds
+- An external API call that hung
+- Waiting for a response from another service
+- All of the above, happening in sequence vs. parallel
+
+Distributed tracing answers: *"This request took 6 seconds. Show me a timeline of every operation that happened and where the time went."* That's the SRE superpower — you don't have to guess, you just look at the waterfall.
+
+**Portfolio angle:** Demonstrates maturity in production observability. Most engineers can cobble together metrics + logs; distributed tracing shows you understand the full request lifecycle and can debug complex systems at scale.
+
+---
+
 This doc covers the mental models for distributed tracing in the `sre-lab` stack.
-Read top-to-bottom: concepts → where Tempo fits → what happens inside the Flask app.
+Read top-to-bottom: concepts → where Tempo fits → what happens inside the Flask app → a practical Grafana walkthrough.
 
 ---
 
@@ -271,6 +287,65 @@ ghost. Always confirm with:
 ```bash
 curl -s -u admin:$GF_ADMIN_PASSWORD \
   http://localhost:3000/api/datasources/uid/loki | jq .jsonData
+```
+
+---
+
+## 6.5 — Practical Walkthrough: Reading a Waterfall in Grafana
+
+Here's what you *actually* do as an SRE when you get paged about a slow request:
+
+### Step 1: Find a log entry with the error or latency spike
+```
+Grafana Explore → Loki → {container="/sre-lab-app"} | json
+↓
+See a log line with status=500 or duration=high
+Example: {"timestamp":"2026-06-07T09:05:22Z","trace_id":"944f6d9c30d5...","level":"ERROR"}
+```
+
+### Step 2: Click the trace_id link
+```
+In the log details, look for the trace_id field.
+You'll see a "Tempo" button next to it.
+Click it.
+```
+
+### Step 3: Grafana queries Tempo and shows the waterfall
+```
+Waterfall view loads in a split pane (right side of screen)
+
+  Time (ms)   0──────10────20────30────40────50────60
+  ┌─────────────────────────────────────────────────┐
+  │ GET /api/slow (parent span)              6100ms │  ◄─ total request time
+  │   └─ artificial_delay (child span)       6000ms │  ◄─ the sleep
+  │   └─ [100ms unaccounted for]                    │  ◄─ overhead/other work
+  └─────────────────────────────────────────────────┘
+
+  Or for an error case:
+  ┌─────────────────────────────────────────────────┐
+  │ GET /api/error (parent span, RED)         150ms │  ◄─ marked as error
+  │   └─ [event] Exception: Simulated failure      │  ◄─ exception details
+  │   └─ [exception traceback]                     │
+  └─────────────────────────────────────────────────┘
+```
+
+### Step 4: Diagnose
+- **If time is in one child span** → that's your bottleneck (slow query, slow API call, etc.)
+- **If time is spread across many spans** → contention or sequential operations that should be parallel
+- **If spans are red** → failed dependencies, retries, or error propagation
+- **If a span has unexpected gaps** → GC pauses, lock contention, or external waits
+
+### Real example: Why did this request take 6 seconds?
+```
+Log shows: duration=6123, trace_id=abc123
+Click trace_id.
+Waterfall shows:
+  GET /api/slow (6123ms total)
+    └─ artificial_delay (6000ms child span)
+       └─ time.sleep(6)  ◄─ THERE IT IS. The 6 seconds are in the sleep.
+
+You've narrowed it down in 3 clicks instead of reading code or running a profiler.
+That's the superpower.
 ```
 
 ---

@@ -33,3 +33,7 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code local configuration
+.claude/
+.codex/
