@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sre-lab-app
-  namespace: default
+  namespace: sre-lab
 spec:
   replicas: 1
   selector:
