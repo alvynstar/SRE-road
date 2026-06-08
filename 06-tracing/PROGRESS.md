@@ -182,20 +182,31 @@ Moving `OTEL_EXPORTER_OTLP_ENDPOINT` to `docker-compose.yml` makes the wiring vi
 
 ---
 
-## Next Steps
+## Completion Status
 
-Phase 6 is **COMPLETE**. The distributed tracing system is fully functional:
-- ✅ App instruments every request automatically
-- ✅ Manual spans mark important operations
-- ✅ Logs include trace IDs for correlation
-- ✅ Tempo stores all traces
-- ✅ Grafana displays waterfalls
-- ✅ One-click log-to-trace jumps work
-- ✅ Error traces are visually distinct
+Phase 6 is **FULLY COMPLETE** as of 2026-06-07. The distributed tracing system is production-ready:
+- ✅ App instruments every request automatically (OTel SDK + auto-instrumentation)
+- ✅ Manual spans mark important operations (artificial_delay, error handling)
+- ✅ Logs include trace IDs for correlation (TraceIdFilter in JSON logs)
+- ✅ Tempo stores all traces persistently (tempo_data volume)
+- ✅ Grafana displays waterfalls (Tempo datasource)
+- ✅ One-click log-to-trace jumps work (Loki derived fields)
+- ✅ Error traces are visually distinct (exception recording + status marking)
+- ✅ Portfolio documentation complete (CONCEPTS.md + PHASE-SUMMARY.md)
 
-Potential enhancements (future roadmap):
+### Deliverables
+- `CONCEPTS.md` — enhanced with "Why This Matters" + practical Grafana walkthrough
+- `PHASE-SUMMARY.md` — portfolio narrative, interview talking points, skills demonstrated
+- `PROGRESS.md` — this document, full validation results
+
+---
+
+## Future Enhancements (Post-Phase 6)
+
+These are potential enhancements for Phase 8+ (multi-service tracing):
 - [ ] Trace sampling (for high-traffic services, store only 1 in 100 traces)
 - [ ] Span processors for custom attributes (e.g., user_id, customer_id)
 - [ ] Trace-to-metrics (generate RED metrics from traces)
 - [ ] Service map visualization (see which services call which)
 - [ ] Histogram analysis (latency distribution across spans)
+- [ ] Multi-service trace context propagation (Phase 8: Distributed Tracing at Scale)

@@ -243,6 +243,30 @@ All three are wired together via `trace_id` in JSON logs + Grafana derived field
 
 ---
 
+## Phase 7 — Kubernetes Advanced Operations (IN PROGRESS)
+
+### What we're building
+Multi-node Kubernetes cluster with cluster-level observability, persistent storage, network policies, and operational procedures. Moving from "single-node kind with basic Deployments" (Phase 3) to production-like K8s infrastructure.
+
+### Sub-phases
+| # | Sub-phase | Status |
+|---|-----------|--------|
+| 7.1 | Scale to 3-node kind cluster | **TODO** — multi-node environment |
+| 7.2 | Cluster-level observability | **TODO** — node metrics, kubelet, resource usage |
+| 7.3 | Persistent storage + StatefulSet | **TODO** — database-like workload example |
+| 7.4 | Network policies + resource limits | **TODO** — see what happens when limits breach |
+| 7.5 | Operational procedures | **TODO** — drain, cordon, upgrade runbooks |
+
+### Why Phase 7 matters
+You can't debug a broken app without understanding the cluster it runs on. Resource contention, node failures, storage exhaustion are common prod issues. Phase 7 teaches cluster operations SRE.
+
+### Key files (TBD)
+- `07-kubernetes/kind-config.yaml` — 3-node cluster config
+- `07-kubernetes/PROGRESS.md` — phase log
+- `07-kubernetes/terraform/` or `manifests/` — IaC (to be decided)
+
+---
+
 ## Repo Structure (Roadmap View)
 ```
 sre-lab/
@@ -254,7 +278,8 @@ sre-lab/
 ├── 03-cicd/            ← Phase 3 (DONE — all 5 sub-phases complete)
 ├── 04-logs-loki/       ← Phase 4 (DONE — all 5 sub-phases complete)
 ├── 05-reliability/     ← Phase 5 (DONE — SLOs, error budget dashboard, burn rate alerts)
-└── 06-tracing/         ← Phase 6 (DONE — distributed tracing with Tempo + OTel)
+├── 06-tracing/         ← Phase 6 (DONE — distributed tracing with Tempo + OTel)
+└── 07-kubernetes/      ← Phase 7 (IN PROGRESS — multi-node K8s, cluster ops)
 ```
 
 ## Secrets & Env
