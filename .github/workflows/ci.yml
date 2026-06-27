@@ -86,30 +86,25 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-and-annotate:
-    name: Deploy to kind cluster and annotate Grafana
+    name: Deploy to kind cluster
     needs: docker-build-push
     if: github.event_name != 'pull_request'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: sre-lab
+
+      - name: Create namespace
+        run: kubectl create namespace sre-lab
+
       - name: Deploy to kind cluster
-        run: kubectl apply -f 03-cicd/k8s/
+        run: kubectl apply -f 03-cicd/k8s/deployment.yaml -f 03-cicd/k8s/service.yaml
 
       - name: Wait for rollout
-        run: kubectl rollout status deployment/sre-lab-app --timeout=120s
-
-      - name: Annotate Grafana
-        run: |
-          $body = @{
-            dashboardUID = "flask-golden-signals"
-            text = "Deployed sha-${{ github.sha }} to kind cluster"
-            tags = @("deploy", "ci")
-          } | ConvertTo-Json
-          $headers = @{
-            "Content-Type" = "application/json"
-            "Authorization" = "Bearer ${{ secrets.GRAFANA_TOKEN }}"
-          }
-          Invoke-RestMethod -Uri http://localhost:3000/api/annotations -Method Post -Headers $headers -Body $body
+        run: kubectl rollout status deployment/sre-lab-app -n sre-lab --timeout=120s
